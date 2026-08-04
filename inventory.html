@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plywood Stock & Sales</title>
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --card:#ffffff;
+    --wood:#8a5a2b;
+    --wood-dark:#5e3b1c;
+    --accent:#c97a2b;
+    --text:#2b241c;
+    --muted:#8a7d6a;
+    --danger:#c0392b;
+    --good:#2e7d32;
+    --border:#e3dccb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header{
+    background:linear-gradient(135deg,var(--wood-dark),var(--wood));
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header h1{margin:0;font-size:1.3rem;}
+  header .sub{font-size:0.85rem;opacity:0.9;}
+  main{
+    max-width:1000px;
+    margin:0 auto;
+    padding:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  }
+  .card h2{
+    margin:0 0 12px 0;
+    font-size:1.05rem;
+    color:var(--wood-dark);
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  select, input[type=text], input[type=number]{
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:0.95rem;
+    background:#fff;
+  }
+  select{min-width:160px;}
+  input[type=number]{width:110px;}
+  button{
+    padding:9px 16px;
+    border:none;
+    border-radius:8px;
+    background:var(--accent);
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+    font-size:0.9rem;
+  }
+  button:hover{opacity:0.9;}
+  button.secondary{background:#fff;color:var(--wood-dark);border:1px solid var(--border);}
+  button.danger{background:var(--danger);}
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:0.92rem;}
+  th{color:var(--muted);font-weight:600;font-size:0.8rem;text-transform:uppercase;}
+  tr:hover{background:#faf8f3;}
+  .stock-low{color:var(--danger);font-weight:700;}
+  .stock-ok{color:var(--good);font-weight:600;}
+  .pill{
+    display:inline-block;
+    padding:2px 10px;
+    border-radius:12px;
+    font-size:0.78rem;
+    font-weight:600;
+  }
+  .pill.open{background:#e8f5e9;color:var(--good);}
+  .pill.closed{background:#eee;color:var(--muted);}
+  .muted{color:var(--muted);font-size:0.85rem;}
+  .delete-btn{
+    background:none;border:none;color:var(--danger);
+    cursor:pointer;font-size:1.1rem;padding:2px 6px;
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.8rem;
+    padding:20px;
+  }
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--wood-dark);color:#fff;padding:10px 18px;
+    border-radius:8px;font-size:0.9rem;z-index:999;
+    opacity:0;transition:opacity 0.3s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🪵 Plywood — Stock & Sales</h1>
+    <div class="sub" id="todayLabel"></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Day status -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <div>
+        <b>Today's status:</b>
+        <span id="dayStatusPill" class="pill open">Open</span>
+        <div class="muted" id="dayStatusNote"></div>
+      </div>
+      <button class="secondary" onclick="manualCloseDay()">Close Day Now</button>
+    </div>
+  </div>
+
+  <!-- New sale entry -->
+  <div class="card">
+    <h2>📝 New Sale Entry</h2>
+    <div class="row">
+      <select id="saleItem"></select>
+      <input type="number" id="saleQty" placeholder="Qty (sheets)" min="1">
+      <input type="text" id="saleNote" placeholder="Note (optional)">
+      <button onclick="addSale()">Add Sale</button>
+    </div>
+  </div>
+
+  <!-- Today's entries -->
+  <div class="card">
+    <h2>📋 Today's Entries</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Note</th><th>Time</th><th></th></tr></thead>
+      <tbody id="todayEntriesBody"></tbody>
+    </table>
+    <div id="todayEmptyMsg" class="muted">No sales entered yet today.</div>
+  </div>
+
+  <!-- Current stock -->
+  <div class="card">
+    <h2>📦 Current Stock</h2>
+    <div class="row" style="margin-bottom:10px;">
+      <input type="text" id="newItemName" placeholder="New item name e.g. 18mm C">
+      <input type="number" id="newItemStock" placeholder="Starting stock" min="0">
+      <button onclick="addNewItem()">Add Item</button>
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+      <select id="addStockItem"></select>
+      <input type="number" id="addStockQty" placeholder="Qty received" min="1">
+      <button class="secondary" onclick="addStockIn()">➕ Add Purchase / Stock In</button>
+    </div>
+    <table>
+      <thead><tr><th>Item</th><th>Stock (sheets)</th><th></th></tr></thead>
+      <tbody id="stockBody"></tbody>
+    </table>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <h2>🗂 Past Closed Days</h2>
+    <table>
+      <thead><tr><th>Date</th><th>Items Sold</th><th>Total Sheets Sold</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div id="historyEmptyMsg" class="muted">No days closed yet.</div>
+  </div>
+
+</main>
+<footer>Plywood Tracker — saved automatically in this browser</footer>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   DEFAULT ITEM LIST (edit here if you want to change defaults)
+   ============================================================ */
+const DEFAULT_ITEMS = [
+  "18mm C","18mm B","12mm C","12mm B","10mm C","10mm B","6mm C","6mm B",
+  "18mm W/P","12mm W/P","10mm W/P","6mm W/P",
+  "18mm W/B","12mm W/B","10mm W/B",
+  "Red Ply 18mm","Red Ply 12mm","Red Ply 10mm"
+];
+
+/* ============================================================
+   STORAGE HELPERS (everything lives in localStorage - this browser only)
+   ============================================================ */
+function load(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  }catch(e){ return fallback; }
+}
+function save(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+let stockData = load("ply_stock", null);
+if(!stockData){
+  stockData = {};
+  DEFAULT_ITEMS.forEach(name => stockData[name] = 0);
+  save("ply_stock", stockData);
+}
+
+let salesData = load("ply_sales", []);        // array of {id, item, qty, note, date, time}
+let closedDates = load("ply_closedDates", {}); // { "2026-08-04": {closedAt, totals} }
+
+let todayStr = getTodayStr();
+function getTodayStr(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  document.getElementById("todayLabel").textContent = "Today: " + todayStr;
+  renderStockTable();
+  renderItemDropdowns();
+  renderTodayEntries();
+  updateDayStatusUI();
+  renderHistory();
+  checkAutoCloseLoop();
+}
+
+/* ============================================================
+   STOCK
+   ============================================================ */
+function renderStockTable(){
+  const body = document.getElementById("stockBody");
+  body.innerHTML = "";
+  Object.keys(stockData).sort().forEach(item=>{
+    const qty = stockData[item];
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${item}</td>
+      <td class="${qty<=5 ? 'stock-low':'stock-ok'}">${qty}</td>
+      <td><button class="delete-btn" onclick="deleteItem('${item.replace(/'/g,"\\'")}')">✕</button></td>`;
+    body.appendChild(tr);
+  });
+}
+
+function renderItemDropdowns(){
+  ["saleItem","addStockItem"].forEach(id=>{
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = "";
+    Object.keys(stockData).sort().forEach(item=>{
+      const opt = document.createElement("option");
+      opt.value = item; opt.textContent = item;
+      sel.appendChild(opt);
+    });
+    if(current) sel.value = current;
+  });
+}
+
+function addNewItem(){
+  const name = document.getElementById("newItemName").value.trim();
+  const stock = parseInt(document.getElementById("newItemStock").value) || 0;
+  if(!name){ alert("Enter an item name"); return; }
+  stockData[name] = stock;
+  save("ply_stock", stockData);
+  document.getElementById("newItemName").value = "";
+  document.getElementById("newItemStock").value = "";
+  renderStockTable();
+  renderItemDropdowns();
+  showToast("Item added: " + name);
+}
+
+function deleteItem(item){
+  if(!confirm(`Remove "${item}" from stock list? (This won't delete past sales history)`)) return;
+  delete stockData[item];
+  save("ply_stock", stockData);
+  renderStockTable();
+  renderItemDropdowns();
+}
+
+function addStockIn(){
+  const item = document.getElementById("addStockItem").value;
+  const qty = parseInt(document.getElementById("addStockQty").value);
+  if(!item || !qty || qty<=0){ alert("Select item and enter a valid quantity"); return; }
+  stockData[item] = (stockData[item]||0) + qty;
+  save("ply_stock", stockData);
+  document.getElementById("addStockQty").value = "";
+  renderStockTable();
+  showToast(`+${qty} added to ${item}`);
+}
+
+/* ============================================================
+   TODAY'S SALE ENTRIES
+   ============================================================ */
+function renderTodayEntries(){
+  const body = document.getElementById("todayEntriesBody");
+  const emptyMsg = document.getElementById("todayEmptyMsg");
+  const todays = salesData.filter(e => e.date === todayStr);
+  body.innerHTML = "";
+  emptyMsg.style.display = todays.length ? "none" : "block";
+  todays.forEach(e=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${e.item}</td><td>${e.qty}</td><td>${e.note||""}</td><td>${e.time||""}</td>
+      <td><button class="delete-btn" onclick="deleteSale('${e.id}')">✕</button></td>`;
+    body.appendChild(tr);
+  });
+}
+
+function addSale(){
+  const item = document.getElementById("saleItem").value;
+  const qty = parseInt(document.getElementById("saleQty").value);
+  const note = document.getElementById("saleNote").value.trim();
+  if(!item || !qty || qty<=0){ alert("Select item and enter a valid quantity"); return; }
+  if(closedDates[todayStr]){ alert("Today is already closed."); return; }
+
+  salesData.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    item, qty, note,
+    date: todayStr,
+    time: new Date().toLocaleTimeString()
+  });
+  save("ply_sales", salesData);
+  document.getElementById("saleQty").value = "";
+  document.getElementById("saleNote").value = "";
+  renderTodayEntries();
+  showToast("Sale added");
+}
+
+function deleteSale(id){
+  if(!confirm("Delete this entry?")) return;
+  salesData = salesData.filter(e => e.id !== id);
+  save("ply_sales", salesData);
+  renderTodayEntries();
+}
+
+/* ============================================================
+   DAY CLOSE (9 PM automatic + manual button)
+   ============================================================ */
+function updateDayStatusUI(){
+  const pill = document.getElementById("dayStatusPill");
+  const note = document.getElementById("dayStatusNote");
+  if(closedDates[todayStr]){
+    pill.textContent = "Closed";
+    pill.className = "pill closed";
+    note.textContent = "Today's stock has been settled.";
+  } else {
+    pill.textContent = "Open";
+    pill.className = "pill open";
+    note.textContent = "Stock auto-settles at 9:00 PM if this tab is open, or use the button to close early.";
+  }
+}
+
+function closeDay(dateStr){
+  if(closedDates[dateStr]) return;
+
+  const todays = salesData.filter(e => e.date === dateStr);
+  const totals = {};
+  todays.forEach(e => totals[e.item] = (totals[e.item]||0) + Number(e.qty||0));
+
+  Object.keys(totals).forEach(item=>{
+    stockData[item] = (stockData[item]||0) - totals[item];
+  });
+  save("ply_stock", stockData);
+
+  closedDates[dateStr] = { closedAt: new Date().toISOString(), totals };
+  save("ply_closedDates", closedDates);
+
+  renderStockTable();
+  updateDayStatusUI();
+  renderHistory();
+  showToast("Day " + dateStr + " closed & stock updated");
+}
+
+function manualCloseDay(){
+  if(closedDates[todayStr]){ alert("Today is already closed."); return; }
+  if(confirm("Close today's day now? This will subtract today's sales from stock.")){
+    closeDay(todayStr);
+  }
+}
+
+// Auto-close: checks every minute while this page/tab is open.
+// If it's 9:00 PM or later and today isn't closed yet, close it.
+// Also detects when the date rolls past midnight to start a fresh day.
+function checkAutoCloseLoop(){
+  setInterval(()=>{
+    const currentDay = getTodayStr();
+    if(currentDay !== todayStr){
+      todayStr = currentDay;
+      document.getElementById("todayLabel").textContent = "Today: " + todayStr;
+      renderTodayEntries();
+      updateDayStatusUI();
+    }
+    const now = new Date();
+    if(now.getHours() >= 21 && !closedDates[todayStr]){
+      closeDay(todayStr);
+    }
+  }, 60000); // check every 60 seconds
+}
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+function renderHistory(){
+  const body = document.getElementById("historyBody");
+  const emptyMsg = document.getElementById("historyEmptyMsg");
+  const dates = Object.keys(closedDates).sort().reverse();
+  body.innerHTML = "";
+  emptyMsg.style.display = dates.length ? "none" : "block";
+  dates.forEach(dateStr=>{
+    const totals = closedDates[dateStr].totals || {};
+    const itemsStr = Object.keys(totals).map(k=>`${k}: ${totals[k]}`).join(", ") || "—";
+    const totalSold = Object.values(totals).reduce((a,b)=>a+b,0);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${dateStr}</td><td>${itemsStr}</td><td>${totalSold}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
