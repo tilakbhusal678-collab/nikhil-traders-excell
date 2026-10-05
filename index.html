@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Business Excel</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f3f4f6;
+    overflow:hidden;
+    color:#222;
+}
+
+/* ================= TOP BAR ================= */
+
+.topbar{
+    height:58px;
+    background:#1f2937;
+    color:white;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    flex-wrap:wrap;
+}
+
+.logo{
+    font-size:18px;
+    font-weight:bold;
+    margin-right:10px;
+    white-space:nowrap;
+}
+
+button{
+    border:0;
+    border-radius:5px;
+    padding:8px 11px;
+    background:#374151;
+    color:white;
+    cursor:pointer;
+    font-size:13px;
+}
+
+button:hover{
+    background:#4b5563;
+}
+
+button.green{
+    background:#047857;
+}
+
+button.blue{
+    background:#2563eb;
+}
+
+button.red{
+    background:#b91c1c;
+}
+
+.search{
+    margin-left:auto;
+    width:180px;
+    padding:8px;
+    border:0;
+    border-radius:5px;
+    outline:none;
+}
+
+/* ================= FORMULA BAR ================= */
+
+.formula{
+    height:42px;
+    background:white;
+    border-bottom:1px solid #ccc;
+    display:flex;
+}
+
+.namebox{
+    width:75px;
+    min-width:75px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#e5e7eb;
+    border-right:1px solid #ccc;
+    font-weight:bold;
+}
+
+#formula{
+    flex:1;
+    border:0;
+    outline:none;
+    padding:0 12px;
+    font-size:14px;
+}
+
+/* ================= SHEET ================= */
+
+.sheet{
+    position:absolute;
+    top:100px;
+    bottom:72px;
+    left:0;
+    right:0;
+    overflow:auto;
+    background:white;
+}
+
+#grid{
+    position:relative;
+}
+
+.cell{
+    position:absolute;
+    width:120px;
+    height:28px;
+    border-right:1px solid #d1d5db;
+    border-bottom:1px solid #d1d5db;
+    background:white;
+    padding:5px 7px;
+    font-size:13px;
+    overflow:hidden;
+    white-space:nowrap;
+    outline:none;
+}
+
+.cell:focus{
+    border:2px solid #2563eb;
+    padding:4px 6px;
+    z-index:10;
+}
+
+.header{
+    background:#e5e7eb;
+    font-weight:bold;
+    text-align:center;
+    user-select:none;
+}
+
+.rowhead{
+    width:55px;
+    left:0;
+}
+
+/* ================= SHEET TABS ================= */
+
+.sheetbar{
+    position:fixed;
+    bottom:30px;
+    left:0;
+    right:0;
+    height:42px;
+    background:#e5e7eb;
+    border-top:1px solid #bbb;
+    display:flex;
+    align-items:center;
+    overflow-x:auto;
+    padding:4px;
+    gap:4px;
+}
+
+.sheet-tab{
+    background:#d1d5db;
+    color:#222;
+    border:1px solid #aaa;
+    border-radius:4px 4px 0 0;
+    padding:8px 16px;
+    cursor:pointer;
+    white-space:nowrap;
+    font-size:13px;
+}
+
+.sheet-tab:hover{
+    background:#c4c9d1;
+}
+
+.sheet-tab.active{
+    background:white;
+    border-bottom:3px solid #2563eb;
+    font-weight:bold;
+}
+
+.new-sheet{
+    background:#047857;
+    color:white;
+    font-weight:bold;
+}
+
+/* ================= STATUS ================= */
+
+.status{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    height:30px;
+    background:#1f2937;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 12px;
+    font-size:12px;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:900px){
+
+    .search{
+        display:none;
+    }
+
+    .logo{
+        font-size:15px;
+    }
+
+    .topbar{
+        height:auto;
+        min-height:58px;
+    }
+
+    .sheet{
+        top:115px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+
+<div class="topbar">
+
+    <div class="logo">
+        📊 My Business Excel
+    </div>
+
+    <button
+        class="green"
+        onclick="newSheet()">
+        ＋ New Sheet
+    </button>
+
+    <button
+        onclick="renameSheet()">
+        ✏ Rename
+    </button>
+
+    <button
+        class="red"
+        onclick="deleteSheet()">
+        🗑 Delete Sheet
+    </button>
+
+    <button
+        onclick="addRow()">
+        ＋ Row
+    </button>
+
+    <button
+        onclick="deleteRow()">
+        − Row
+    </button>
+
+    <button
+        onclick="addColumn()">
+        ＋ Column
+    </button>
+
+    <button
+        onclick="deleteColumn()">
+        − Column
+    </button>
+
+    <button
+        class="blue"
+        onclick="save()">
+        💾 Save
+    </button>
+
+    <button
+        onclick="exportCSV()">
+        ⬇ Export
+    </button>
+
+    <button
+        onclick="document.getElementById('file').click()">
+        ⬆ Import
+    </button>
+
+    <button
+        onclick="clearCurrentSheet()"
+        class="red">
+        Clear
+    </button>
+
+    <input
+        class="search"
+        id="search"
+        placeholder="Search..."
+        oninput="searchData()"
+    >
+
+</div>
+
+
+<!-- ================= FORMULA BAR ================= -->
+
+<div class="formula">
+
+    <div
+        class="namebox"
+        id="cellName">
+        A1
+    </div>
+
+    <input
+        id="formula"
+        placeholder="Type data here..."
+        oninput="formulaChanged()"
+    >
+
+</div>
+
+
+<!-- ================= SPREADSHEET ================= -->
+
+<div
+    class="sheet"
+    id="sheet">
+
+    <div id="grid"></div>
+
+</div>
+
+
+<!-- ================= SHEET TABS ================= -->
+
+<div
+    class="sheetbar"
+    id="sheetBar">
+
+</div>
+
+
+<!-- ================= STATUS ================= -->
+
+<div class="status">
+
+    <span id="status">
+        Ready
+    </span>
+
+    <span id="saved">
+        Saved locally ✓
+    </span>
+
+</div>
+
+
+<input
+    type="file"
+    id="file"
+    accept=".csv"
+    hidden
+>
+
+
+<script>
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+const MAX_ROWS = 20000;
+const MAX_COLS = 500;
+
+const ROW_HEIGHT = 28;
+const COL_WIDTH = 120;
+const ROW_HEADER = 55;
+const HEADER_HEIGHT = 28;
+
+
+/* =========================================================
+   SHEETS
+========================================================= */
+
+let sheets = {};
+
+let currentSheet = "Sheet1";
+
+let selectedRow = 0;
+let selectedCol = 0;
+
+
+/* =========================================================
+   DEFAULT SHEET
+========================================================= */
+
+sheets["Sheet1"] = {
+
+    rows:200,
+
+    cols:20,
+
+    data:{}
+
+};
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const grid =
+    document.getElementById("grid");
+
+const sheet =
+    document.getElementById("sheet");
+
+const formula =
+    document.getElementById("formula");
+
+const cellName =
+    document.getElementById("cellName");
+
+const status =
+    document.getElementById("status");
+
+const saved =
+    document.getElementById("saved");
+
+const sheetBar =
+    document.getElementById("sheetBar");
+
+
+/* =========================================================
+   CURRENT SHEET
+========================================================= */
+
+function current(){
+
+    return sheets[currentSheet];
+
+}
+
+
+/* =========================================================
+   CELL KEY
+========================================================= */
+
+function cellKey(r,c){
+
+    return r + "_" + c;
+
+}
+
+
+/* =========================================================
+   COLUMN LETTER
+========================================================= */
+
+function columnName(n){
+
+    let result="";
+
+    while(n>=0){
+
+        result =
+            String.fromCharCode(
+                (n%26)+65
+            )
+            + result;
+
+        n =
+            Math.floor(n/26)-1;
+    }
+
+    return result;
+
+}
+
+
+/* =========================================================
+   UPDATE GRID SIZE
+========================================================= */
+
+function updateSize(){
+
+    const s=current();
+
+    grid.style.width =
+        (
+            ROW_HEADER +
+            s.cols*COL_WIDTH
+        )+"px";
+
+    grid.style.height =
+        (
+            HEADER_HEIGHT +
+            s.rows*ROW_HEIGHT
+        )+"px";
+
+}
+
+
+/* =========================================================
+   RENDER SHEET TABS
+========================================================= */
+
+function renderTabs(){
+
+    sheetBar.innerHTML="";
+
+    Object.keys(sheets).forEach(
+        function(name){
+
+            const tab =
+                document.createElement("div");
+
+            tab.className =
+                "sheet-tab";
+
+            if(name===currentSheet){
+
+                tab.classList.add("active");
+
+            }
+
+            tab.textContent=name;
+
+            tab.onclick=function(){
+
+                switchSheet(name);
+
+            };
+
+            sheetBar.appendChild(tab);
+
+        }
+    );
+
+
+    const add =
+        document.createElement("div");
+
+    add.className =
+        "sheet-tab new-sheet";
+
+    add.textContent="＋";
+
+    add.title="New Sheet";
+
+    add.onclick=function(){
+
+        newSheet();
+
+    };
+
+    sheetBar.appendChild(add);
+
+}
+
+
+/* =========================================================
+   RENDER GRID
+========================================================= */
+
+function render(){
+
+    const s=current();
+
+    grid.innerHTML="";
+
+    const top =
+        sheet.scrollTop;
+
+    const left =
+        sheet.scrollLeft;
+
+    const height =
+        sheet.clientHeight;
+
+    const width =
+        sheet.clientWidth;
+
+
+    let firstRow =
+        Math.max(
+            0,
+            Math.floor(
+                top/ROW_HEIGHT
+            )-2
+        );
+
+
+    let lastRow =
+        Math.min(
+            s.rows,
+            Math.ceil(
+                (top+height)/
+                ROW_HEIGHT
+            )+2
+        );
+
+
+    let firstCol =
+        Math.max(
+            0,
+            Math.floor(
+                Math.max(
+                    0,
+                    left-ROW_HEADER
+                )/
+                COL_WIDTH
+            )-2
+        );
+
+
+    let lastCol =
+        Math.min(
+            s.cols,
+            Math.ceil(
+                (left+width)/
+                COL_WIDTH
+            )+2
+        );
+
+
+    /* COLUMN HEADERS */
+
+    for(
+        let c=firstCol;
+        c<lastCol;
+        c++
+    ){
+
+        const h =
+            document.createElement("div");
+
+        h.className =
+            "cell header";
+
+        h.textContent =
+            columnName(c);
+
+        h.style.left =
+            (
+                ROW_HEADER+
+                c*COL_WIDTH
+            )+"px";
+
+        h.style.top="0px";
+
+        grid.appendChild(h);
+
+    }
+
+
+    /* ROW HEADERS */
+
+    for(
+        let r=firstRow;
+        r<lastRow;
+        r++
+    ){
+
+        const h =
+            document.createElement("div");
+
+        h.className =
+            "cell header rowhead";
+
+        h.textContent =
+            r+1;
+
+        h.style.top =
+            (
+                HEADER_HEIGHT+
+                r*ROW_HEIGHT
+            )+"px";
+
+        grid.appendChild(h);
+
+    }
+
+
+    /* CELLS */
+
+    for(
+        let r=firstRow;
+        r<lastRow;
+        r++
+    ){
+
+        for(
+            let c=firstCol;
+            c<lastCol;
+            c++
+        ){
+
+            const cell =
+                document.createElement("div");
+
+            cell.className="cell";
+
+            cell.contentEditable=true;
+
+            cell.dataset.row=r;
+
+            cell.dataset.col=c;
+
+            cell.style.left =
+                (
+                    ROW_HEADER+
+                    c*COL_WIDTH
+                )+"px";
+
+            cell.style.top =
+                (
+                    HEADER_HEIGHT+
+                    r*ROW_HEIGHT
+                )+"px";
+
+
+            const k =
+                cellKey(r,c);
+
+
+            if(
+                s.data[k] !== undefined
+            ){
+
+                cell.textContent =
+                    s.data[k];
+
+            }
+
+
+            /* FOCUS */
+
+            cell.addEventListener(
+                "focus",
+                function(){
+
+                    selectedRow=r;
+
+                    selectedCol=c;
+
+                    cellName.textContent =
+                        columnName(c)+(r+1);
+
+                    formula.value =
+                        s.data[k] || "";
+
+                }
+            );
+
+
+            /* CHANGE */
+
+            cell.addEventListener(
+                "input",
+                function(){
+
+                    const value =
+                        cell.innerText;
+
+                    if(
+                        value.trim()===""
+                    ){
+
+                        delete s.data[k];
+
+                    }
+                    else{
+
+                        s.data[k]=value;
+
+                    }
+
+                    formula.value=value;
+
+                    autoSave();
+
+                    status.textContent =
+                        currentSheet+
+                        " • "+
+                        columnName(c)+
+                        (r+1)+
+                        " edited";
+
+                }
+            );
+
+
+            /* KEYBOARD */
+
+            cell.addEventListener(
+                "keydown",
+                function(e){
+
+                    if(e.key==="Enter"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r+1,
+                            c
+                        );
+
+                    }
+
+
+                    if(e.key==="Tab"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r,
+                            c+1
+                        );
+
+                    }
+
+
+                    if(e.key==="ArrowDown"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r+1,
+                            c
+                        );
+
+                    }
+
+
+                    if(e.key==="ArrowUp"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r-1,
+                            c
+                        );
+
+                    }
+
+
+                    if(e.key==="ArrowRight"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r,
+                            c+1
+                        );
+
+                    }
+
+
+                    if(e.key==="ArrowLeft"){
+
+                        e.preventDefault();
+
+                        focusCell(
+                            r,
+                            c-1
+                        );
+
+                    }
+
+                }
+            );
+
+
+            grid.appendChild(cell);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   FOCUS CELL
+========================================================= */
+
+function focusCell(r,c){
+
+    const s=current();
+
+    if(
+        r<0 ||
+        c<0 ||
+        r>=s.rows ||
+        c>=s.cols
+    ){
+
+        return;
+
+    }
+
+
+    let cell =
+        document.querySelector(
+            `.cell[data-row="${r}"][data-col="${c}"]`
+        );
+
+
+    if(!cell){
+
+        sheet.scrollTop =
+            Math.max(
+                0,
+                r*ROW_HEIGHT-
+                sheet.clientHeight/2
+            );
+
+        sheet.scrollLeft =
+            Math.max(
+                0,
+                c*COL_WIDTH-
+                sheet.clientWidth/2
+            );
+
+        render();
+
+        cell =
+            document.querySelector(
+                `.cell[data-row="${r}"][data-col="${c}"]`
+            );
+
+    }
+
+
+    if(cell){
+
+        cell.focus();
+
+        selectedRow=r;
+
+        selectedCol=c;
+
+        cellName.textContent =
+            columnName(c)+(r+1);
+
+        formula.value =
+            s.data[
+                cellKey(r,c)
+            ] || "";
+
+    }
+
+}
+
+
+/* =========================================================
+   FORMULA BAR
+========================================================= */
+
+function formulaChanged(){
+
+    const s=current();
+
+    const value =
+        formula.value;
+
+    const k =
+        cellKey(
+            selectedRow,
+            selectedCol
+        );
+
+
+    if(value===""){
+
+        delete s.data[k];
+
+    }
+    else{
+
+        s.data[k]=value;
+
+    }
+
+    render();
+
+    autoSave();
+
+}
+
+
+/* =========================================================
+   NEW SHEET
+========================================================= */
+
+function newSheet(){
+
+    let number=1;
+
+    let name;
+
+    do{
+
+        name="Sheet"+number;
+
+        number++;
+
+    }
+    while(
+        sheets[name]
+    );
+
+
+    sheets[name]={
+
+        rows:200,
+
+        cols:20,
+
+        data:{}
+
+    };
+
+
+    currentSheet=name;
+
+    selectedRow=0;
+
+    selectedCol=0;
+
+
+    renderTabs();
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Created "+name;
+
+}
+
+
+/* =========================================================
+   SWITCH SHEET
+========================================================= */
+
+function switchSheet(name){
+
+    if(!sheets[name])
+        return;
+
+
+    currentSheet=name;
+
+    selectedRow=0;
+
+    selectedCol=0;
+
+    formula.value="";
+
+    cellName.textContent="A1";
+
+
+    renderTabs();
+
+    updateSize();
+
+    render();
+
+
+    status.textContent =
+        "Opened "+name;
+
+}
+
+
+/* =========================================================
+   RENAME SHEET
+========================================================= */
+
+function renameSheet(){
+
+    const oldName =
+        currentSheet;
+
+
+    const newName =
+        prompt(
+            "Enter new sheet name:",
+            oldName
+        );
+
+
+    if(!newName)
+        return;
+
+
+    const name =
+        newName.trim();
+
+
+    if(!name)
+        return;
+
+
+    if(
+        name===oldName
+    )
+        return;
+
+
+    if(
+        sheets[name]
+    ){
+
+        alert(
+            "A sheet with this name already exists."
+        );
+
+        return;
+
+    }
+
+
+    sheets[name] =
+        sheets[oldName];
+
+
+    delete sheets[oldName];
+
+
+    currentSheet=name;
+
+
+    renderTabs();
+
+    autoSave();
+
+
+    status.textContent =
+        "Renamed to "+name;
+
+}
+
+
+/* =========================================================
+   DELETE SHEET
+========================================================= */
+
+function deleteSheet(){
+
+    const names =
+        Object.keys(sheets);
+
+
+    if(names.length<=1){
+
+        alert(
+            "You must keep at least one sheet."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            'Delete sheet "'+
+            currentSheet+
+            '"?'
+        )
+    ){
+
+        return;
+
+    }
+
+
+    delete sheets[currentSheet];
+
+
+    currentSheet =
+        Object.keys(sheets)[0];
+
+
+    selectedRow=0;
+
+    selectedCol=0;
+
+
+    renderTabs();
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Sheet deleted";
+
+}
+
+
+/* =========================================================
+   ADD ROW
+========================================================= */
+
+function addRow(){
+
+    const s=current();
+
+
+    if(
+        s.rows>=MAX_ROWS
+    ){
+
+        alert(
+            "Maximum 20,000 rows reached."
+        );
+
+        return;
+
+    }
+
+
+    s.rows++;
+
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Row added";
+
+}
+
+
+/* =========================================================
+   DELETE ROW
+========================================================= */
+
+function deleteRow(){
+
+    const s=current();
+
+
+    if(s.rows<=1)
+        return;
+
+
+    for(
+        let c=0;
+        c<s.cols;
+        c++
+    ){
+
+        delete s.data[
+            cellKey(
+                s.rows-1,
+                c
+            )
+        ];
+
+    }
+
+
+    s.rows--;
+
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Last row deleted";
+
+}
+
+
+/* =========================================================
+   ADD COLUMN
+========================================================= */
+
+function addColumn(){
+
+    const s=current();
+
+
+    if(
+        s.cols>=MAX_COLS
+    ){
+
+        alert(
+            "Maximum 500 columns reached."
+        );
+
+        return;
+
+    }
+
+
+    s.cols++;
+
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Column added";
+
+}
+
+
+/* =========================================================
+   DELETE COLUMN
+========================================================= */
+
+function deleteColumn(){
+
+    const s=current();
+
+
+    if(s.cols<=1)
+        return;
+
+
+    for(
+        let r=0;
+        r<s.rows;
+        r++
+    ){
+
+        delete s.data[
+            cellKey(
+                r,
+                s.cols-1
+            )
+        ];
+
+    }
+
+
+    s.cols--;
+
+
+    updateSize();
+
+    render();
+
+    autoSave();
+
+
+    status.textContent =
+        "Last column deleted";
+
+}
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+function save(){
+
+    localStorage.setItem(
+        "MY_BUSINESS_EXCEL",
+        JSON.stringify({
+            sheets:sheets,
+            currentSheet:currentSheet
+        })
+    );
+
+
+    saved.textContent =
+        "Saved ✓";
+
+
+    status.textContent =
+        "All data saved";
+
+
+    setTimeout(
+        function(){
+
+            saved.textContent =
+                "Saved locally ✓";
+
+        },
+        1500
+    );
+
+}
+
+
+/* =========================================================
+   AUTO SAVE
+========================================================= */
+
+let saveTimer;
+
+
+function autoSave(){
+
+    clearTimeout(saveTimer);
+
+
+    saveTimer =
+        setTimeout(
+            function(){
+
+                localStorage.setItem(
+                    "MY_BUSINESS_EXCEL",
+                    JSON.stringify({
+                        sheets:sheets,
+                        currentSheet:currentSheet
+                    })
+                );
+
+
+                saved.textContent =
+                    "Saved locally ✓";
+
+            },
+            300
+        );
+
+
+    saved.textContent =
+        "Saving...";
+
+}
+
+
+/* =========================================================
+   LOAD
+========================================================= */
+
+function load(){
+
+    const savedData =
+        localStorage.getItem(
+            "MY_BUSINESS_EXCEL"
+        );
+
+
+    if(savedData){
+
+        try{
+
+            const obj =
+                JSON.parse(
+                    savedData
+                );
+
+
+            if(obj.sheets){
+
+                sheets=obj.sheets;
+
+            }
+
+
+            if(
+                obj.currentSheet &&
+                sheets[obj.currentSheet]
+            ){
+
+                currentSheet =
+                    obj.currentSheet;
+
+            }
+            else{
+
+                currentSheet =
+                    Object.keys(sheets)[0];
+
+            }
+
+        }
+        catch(e){
+
+            console.log(
+                "Could not load data."
+            );
+
+        }
+
+    }
+
+
+    renderTabs();
+
+    updateSize();
+
+    render();
+
+}
+
+
+/* =========================================================
+   CLEAR CURRENT SHEET
+========================================================= */
+
+function clearCurrentSheet(){
+
+    if(
+        !confirm(
+            'Delete all data from "'+
+            currentSheet+
+            '"?'
+        )
+    ){
+
+        return;
+
+    }
+
+
+    current().data={};
+
+
+    save();
+
+    render();
+
+
+    status.textContent =
+        "Current sheet cleared";
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+function searchData(){
+
+    const search =
+        document
+        .getElementById("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    if(!search){
+
+        status.textContent =
+            "Ready";
+
+        return;
+
+    }
+
+
+    const s=current();
+
+
+    for(
+        const k in s.data
+    ){
+
+        if(
+            String(s.data[k])
+            .toLowerCase()
+            .includes(search)
+        ){
+
+            const parts =
+                k.split("_");
+
+
+            const r =
+                Number(parts[0]);
+
+            const c =
+                Number(parts[1]);
+
+
+            focusCell(r,c);
+
+
+            status.textContent =
+                "Found: "+
+                columnName(c)+
+                (r+1);
+
+
+            return;
+
+        }
+
+    }
+
+
+    status.textContent =
+        "Not found";
+
+}
+
+
+/* =========================================================
+   EXPORT CSV
+========================================================= */
+
+function exportCSV(){
+
+    const s=current();
+
+    let csv="";
+
+
+    for(
+        let r=0;
+        r<s.rows;
+        r++
+    ){
+
+        let line=[];
+
+
+        for(
+            let c=0;
+            c<s.cols;
+            c++
+        ){
+
+            let value =
+                s.data[
+                    cellKey(r,c)
+                ] || "";
+
+
+            value =
+                String(value)
+                .replace(
+                    /"/g,
+                    '""'
+                );
+
+
+            line.push(
+                '"'+
+                value+
+                '"'
+            );
+
+        }
+
+
+        csv +=
+            line.join(",")+
+            "\n";
+
+    }
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                "text/csv;charset=utf-8"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement("a");
+
+
+    a.href=url;
+
+    a.download =
+        currentSheet+
+        ".csv";
+
+
+    a.click();
+
+
+    URL.revokeObjectURL(url);
+
+
+    status.textContent =
+        "CSV exported";
+
+}
+
+
+/* =========================================================
+   IMPORT CSV
+========================================================= */
+
+document
+.getElementById("file")
+.addEventListener(
+    "change",
+    function(e){
+
+        const file =
+            e.target.files[0];
+
+
+        if(!file)
+            return;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(){
+
+                const lines =
+                    reader.result
+                    .split(/\r?\n/);
+
+
+                const s=current();
+
+
+                s.data={};
+
+
+                let maxCols=0;
+
+
+                lines.forEach(
+                    function(line,r){
+
+                        if(
+                            !line.trim()
+                        )
+                            return;
+
+
+                        const values =
+                            parseCSV(line);
+
+
+                        maxCols =
+                            Math.max(
+                                maxCols,
+                                values.length
+                            );
+
+
+                        values.forEach(
+                            function(value,c){
+
+                                if(
+                                    value!==""
+                                ){
+
+                                    s.data[
+                                        cellKey(
+                                            r,
+                                            c
+                                        )
+                                    ]=value;
+
+                                }
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                s.rows =
+                    Math.min(
+                        Math.max(
+                            lines.length,
+                            200
+                        ),
+                        MAX_ROWS
+                    );
+
+
+                s.cols =
+                    Math.min(
+                        Math.max(
+                            maxCols,
+                            20
+                        ),
+                        MAX_COLS
+                    );
+
+
+                updateSize();
+
+                render();
+
+                save();
+
+
+                status.textContent =
+                    "CSV imported";
+
+            };
+
+
+        reader.readAsText(file);
+
+    }
+);
+
+
+/* =========================================================
+   CSV PARSER
+========================================================= */
+
+function parseCSV(line){
+
+    const result=[];
+
+    let current="";
+
+    let quotes=false;
+
+
+    for(
+        let i=0;
+        i<line.length;
+        i++
+    ){
+
+        const ch=line[i];
+
+
+        if(ch==='"'){
+
+            if(
+                quotes &&
+                line[i+1]==='"'
+            ){
+
+                current+='"';
+
+                i++;
+
+            }
+            else{
+
+                quotes=!quotes;
+
+            }
+
+        }
+        else if(
+            ch==="," &&
+            !quotes
+        ){
+
+            result.push(current);
+
+            current="";
+
+        }
+        else{
+
+            current+=ch;
+
+        }
+
+    }
+
+
+    result.push(current);
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   SCROLL
+========================================================= */
+
+sheet.addEventListener(
+    "scroll",
+    function(){
+
+        render();
+
+    }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+load();
+
+</script>
+
+</body>
+</html>
